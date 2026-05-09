@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+data/
+wandb/
+checkpoints/
+runs/
+*.fits
+*.fits.gz
+*.pt
+*.pth
+.venv/
+.env
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
