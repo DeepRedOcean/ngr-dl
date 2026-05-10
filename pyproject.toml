@@ -2,7 +2,7 @@
 name = "ngr-dl"
 version = "0.1.0"
 description = "Deep learning for Nancy Grace Roman telescope data"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "astropy>=6.0",
     "photutils>=1.10",
@@ -39,3 +39,15 @@ select = ["E", "F", "W", "I", "N", "UP", "B"]
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
+
+# Pull torch + torchvision from PyTorch's CUDA wheel index so we get GPU-enabled builds
+# (default PyPI wheels are CPU-only). cu124 = CUDA 12.4 runtime, works on RTX 30/40 series
+# with reasonably recent NVIDIA drivers.
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchvision = { index = "pytorch-cu124" }
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
