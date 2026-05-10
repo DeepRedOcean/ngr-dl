@@ -6,10 +6,12 @@ This file is the canonical template for every later training script.
 """
 
 import math
-import wandb
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
+
+import wandb
 
 # ---- Reproducibility ------------------------------------------------------
 # Fixing the seed so re-runs produce the same numbers. Useful for debugging.
@@ -122,7 +124,6 @@ for epoch in range(EPOCHS):
     avg_loss = epoch_loss / n_batches
     print(f"Epoch {epoch + 1}/{EPOCHS} - avg loss: {avg_loss:.4f}")
     wandb.log({"train/epoch_avg_loss": avg_loss, "epoch": epoch}, step=global_step)
-
 
 
 # ---- Final loss -----------------------------------------------------------

@@ -222,6 +222,7 @@ data/
 wandb/
 checkpoints/
 runs/
+.pre-commit-cache/
 *.fits
 *.fits.gz
 *.pt
