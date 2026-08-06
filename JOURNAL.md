@@ -26,7 +26,7 @@
 - Added scikit-image as dep (photutils deblending needs it).
 - Learned: detection threshold has to match the noise floor of the specific image; there's no universal default.
 
-## Day 4 — 2026-07-31 (second half of the day)
+## Day 4 — 2026-08-06
 - Downloaded Roman TDS truth INDEX catalog (per-image ground truth, 14925 objects on this SCA: 14694 galaxies + 165 stars + 66 transients).
 - cross_match.py: pixel-space cross-match, purity/completeness with per-type + per-mag breakdown.
   - Purity 0.962, completeness 0.107 at threshold=100. Star completeness 73% vs galaxy 10% — the depth cliff.
