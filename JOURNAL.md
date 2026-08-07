@@ -26,6 +26,29 @@
 - Added scikit-image as dep (photutils deblending needs it).
 - Learned: detection threshold has to match the noise floor of the specific image; there's no universal default.
 
+## Day 6 — 2026-08-07
+
+- Expanded typer training data: downloaded 4 additional (image + catalog) pairs from IRSA Roman TDS preview (visits 10307/18, 10692/17-18, 11077/17 — some visits 404'd because not every visit has both SCAs in preview). Total: 5 SCAs, 8739 stamps, 721 stars (6.2x v0).
+- Refactored extract_stamps.py for multi-file input (auto-discovers pairs, tracks visit/SCA per stamp).
+- Trained typer v1 on expanded data (same architecture, same hyperparams). Results:
+  - Test accuracy 0.958 -> 0.995
+  - Star recall 0.583 -> 0.959   (+0.376!)
+  - Star F1 0.683 -> 0.972
+  - Missed stars: 10/24 (v0) -> 6/145 (v1)
+- Data-scale hypothesis empirically confirmed: architecture is capable, was starved of examples.
+- Misclassification analysis: last 6 missed stars all at faintest mag bin (4.7-5.4). Two false-positive galaxies now borderline confidence (P=0.64, 0.82) vs v0's confident errors (P=0.94) — model well-calibrated in its errors.
+- Added standing workflow: fetch date at session start, always include venv activation with cd commands, auto-update JOURNAL, auto-add IMPROVEMENTS items.
+
+## Day 5 — 2026-08-06
+
+- Built the first real ML model on Roman data: Stage 1 typer CNN (binary star vs galaxy).
+- Pipeline: extract_stamps.py -> stamps_10307_17.npz (1536 stamps, 1419 galaxy / 117 star, 12:1 imbalance, transients dropped) -> train_typer.py (TinyTyper, 25k params, class-weighted CE, bf16 autocast, wandb) -> inspect_misclassified.py.
+- Test set: 309 stamps. Accuracy 95.8%, but real metric is star recall = 58.3% (14/24). Star precision 82.4%, F1 0.68. Galaxy precision 96.6%, recall 98.9%.
+- Interesting training pathology: at epoch 14-16 val_loss spiked to 2.5 (from 0.24) while train_loss kept falling — BatchNorm running-stat instability on tiny val set. Early stopping saved epoch-12 checkpoint.
+- Misclassification analysis: missed stars cluster at faint end (mag 2-5), correctly-classified stars span full mag range down to mag -4. The 2 false-positive galaxies are highly compact galaxies indistinguishable from stars without color info.
+- GPU actually earned its keep for the first time — training completed in a few seconds.
+- Cascade architecture validated OPERATIONALLY, not just conceptually. Working typer exists.
+
 ## Day 4 — 2026-08-06
 - Downloaded Roman TDS truth INDEX catalog (per-image ground truth, 14925 objects on this SCA: 14694 galaxies + 165 stars + 66 transients).
 - cross_match.py: pixel-space cross-match, purity/completeness with per-type + per-mag breakdown.

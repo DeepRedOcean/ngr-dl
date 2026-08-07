@@ -54,8 +54,66 @@ Ordering within each section: rough priority, top = most useful next.
 
 ## Modeling
 
-- *(empty — nothing in the training pipeline needs improvement yet beyond
-  "actually train a real model")*
+- **Data augmentation for the typer** — random rotations (any angle;
+  orientation is meaningless for these objects), h/v flips, small pixel
+  translations. Current typer overfits at ~90% train accuracy with weak
+  ~60% star recall; augmentation should improve generalization on the
+  small (~70 train stars) dataset.
+- **Multi-band input for the typer** — currently trained on F184 only, so
+  the model has no color information. Roman has 7 filters; feeding several
+  bands as channels would resolve the "compact galaxy looks like a star"
+  false positives that dominate our confident errors.
+- **Per-visit train/test split for the typer** — current stratified split
+  is class-only; when we have multi-visit data (already downloaded), a
+  proper eval should hold out ENTIRE visits, not random samples, because
+  same-visit stamps are spatially correlated. E.g. train on visits
+  {10307, 10692, 11077, 12237} and test on {13772}. Would give a more
+  honest generalization number.
+- **More Roman images (COMPLETED 2026-08-07)** — downloaded 5 visits x
+  2 SCAs. Kept in the queue as historical note.
+- **BatchNorm alternatives on tiny datasets** — the training instability
+  at epochs 14-16 (val_loss spiking while train_loss fell) is a known
+  BN-with-small-batch pathology. GroupNorm or LayerNorm would be more
+  stable at our current batch size (32) and small val set (306).
+- **Wider stamps around confused sources** — some missed stars had nearby
+  galaxies in the 64px window; a larger context might help the model
+  distinguish "point source at center" from "extended source at center".
+- **Segmentation-masked stamps for the typer** — cut the stamp as usual but
+  zero out (or mask) pixels that don't belong to the source's own segment.
+  Directly kills context pollution from nearby unrelated objects, which was
+  the visible failure mode on 5+ of our 10 missed stars. Cheaper than a
+  cascade specialist and same intent. Alternative: two-channel input (raw
+  stamp + binary segment mask) so the model can learn to attend to the
+  source pixels while still seeing local background.
+- **Cascade specialist for star-near-galaxy classification** — a separate
+  model for sources embedded in or immediately adjacent to detected galaxy
+  segments. Worth revisiting when we have (a) multi-image data with more
+  such cases, (b) real physical superpositions (foreground stars on
+  background galaxies) as a well-populated training class. Current
+  ~117-star dataset isn't enough to train yet another specialist without
+  starving it of examples.
+
+## Findings from Stage 1 typer v1 (2026-08-07)
+
+- **Data scale was the primary constraint.** Going from 117 to 721 stars
+  (5x visits) pushed star recall from 0.58 -> 0.96 and F1 from 0.68 -> 0.97.
+  Confirmed empirically: the CNN architecture is capable, it just needed
+  more training examples. Diminishing returns likely start soon on THIS
+  model, so next data expansion probably has less leverage than augmentation
+  or multi-band.
+- **Remaining 4% failures are at the depth limit.** All 6 missed stars in
+  v1 test set are mag 4.7-5.4 (faintest bin only). This is a Roman F184
+  photon-noise floor issue, not a model issue. Would need brighter data or
+  multi-band info to push further.
+- **v1 model is well-calibrated in its errors.** False-positive galaxies
+  in v0 were confident (P=0.94); in v1 they're borderline (P=0.64, 0.82).
+  This means confidence thresholding could route ambiguous cases to human
+  review — a feature for the eventual anomaly pipeline.
+- **The 2 false-positive galaxies in v1 test set look visually unusual**
+  (extended, distorted, or with diffuse halos). They may be interesting
+  anomalies in their own right (interacting galaxies, low-surface-brightness
+  features). Confidence-based routing to a human queue is more valuable than
+  trying to force them into "galaxy" bin.
 
 ## Architecture (from threshold sweep 2026-07-31)
 
